@@ -4,11 +4,14 @@ This is meant to be an example project for learning TensorFlow and understanding
 
 ## Dependencies
 
-Tested using Ubuntu 18.04 and Python 3.6.9
-
-Check if this is still valid by checking [Installing Tensorflow using pip](https://www.tensorflow.org/install/pip)
+Tested using 
+* Ubuntu 18.04 with Python 3.6.9
+* Windows 10 with Python 3.7.9
 
 This code uses Tensorflow >= 2.4
+
+Validate the following steps by checking [Installing Tensorflow using pip](https://www.tensorflow.org/install/pip)
+
 
 *Make sure to use* `python3` *in place of* `python` *if multiple installations of* `python` *are installed on your system*
 
@@ -27,9 +30,9 @@ python -m pip install --upgrade --user keras
 
 ## OpenAI Gym
 
-Check steps at [OpenAI Gym Github](https://github.com/openai/gym) before continuing
+Validate following steps at [OpenAI Gym Github](https://github.com/openai/gym) before continuing
 
-Recommended steps are to install via steps
+Recommended steps are to install via steps (in external installation folder)
 
 ```bash
 git clone https://github.com/openai/gym.git
@@ -39,7 +42,9 @@ pip install -e .
 
 ### Installing custom gym
 
-Check steps at [OpenAI Creating Environments](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
+Validated following steps at [OpenAI Creating Environments](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
+
+While in project folder
 
 ```bash
 pip install -e custom-gym
