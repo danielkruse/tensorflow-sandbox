@@ -10,12 +10,14 @@ Check if this is still valid by checking [Installing Tensorflow using pip](https
 
 This code uses Tensorflow >= 2.4
 
+*Make sure to use* `python3` *in place of* `python` *if multiple installations of* `python` *are installed on your system*
+
 ```bash
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-python3 get-pip.py
-python3 -m pip install --user matplotlib numpy pandas scipy tensorflow keras
-python3 -m pip install --upgrade --user tensorflow
-python3 -m pip install --upgrade --user keras
+python get-pip.py
+python -m pip install --user matplotlib numpy pandas scipy tensorflow keras
+python -m pip install --upgrade --user tensorflow
+python -m pip install --upgrade --user keras
 ```
 
 * `matplotlib` - Data plotting library intended to imitate data visualization used in MATLAB  
