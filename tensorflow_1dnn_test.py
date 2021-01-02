@@ -102,7 +102,7 @@ def display_results(training_history, checkpoint_callback, Xtrain, Ytrain, Xtest
     h_ynn_l, = ax2.plot(Xtest, Ynn_ext, '--', color='black', alpha=0.5)
     ax2.plot(Xtrain, Ytrain, 'o', color='green')
     h_ynn_pts, = ax2.plot(Xtrain, Ynn, 'x', color='blue')
-    ax2.axis([-Xrng, Xrng, Ymin - 0.25*Yrng, Ymax + 0.25*Yrng])
+    ax2.axis([Xmin, Xmax, Ymin - 0.25*Yrng, Ymax + 0.25*Yrng])
     ax2.set(xlabel='X', ylabel='Y')
     ax2.grid()
 
@@ -142,7 +142,7 @@ def display_results(training_history, checkpoint_callback, Xtrain, Ytrain, Xtest
 
     plt.show()
 
-def main(function_name):
+def main(function_name, max_epochs=1000, batch_size=16):
     # Generate dataset according to provided function
     available_functions = {
         'sinusoid': function_sinusoid, 
@@ -197,8 +197,6 @@ def main(function_name):
     # Actual backpropagation
     #   batch_size defaults to 32 if unspecified / set to None
     #   epochs defaults to 1 if unspecified
-    batch_size = 16
-    max_epochs = 1000
     training_history = model.fit(
         x=Xnorm, 
         y=Y, 
@@ -245,9 +243,11 @@ def main(function_name):
     display_results(training_history, custom_model_checkpoint, X, Y, Xext, Yext)
     
     
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description = '1D Tensorflow example')
-    parser.add_argument("-f", "--function", help="function name")
+    parser.add_argument('-f', '--function', help='function name')
+    parser.add_argument('-e', '--epochs', type=int, help='epochs to train over')
+    parser.add_argument('-b', '--batch', type=int, help='batch size')
     args = parser.parse_args()
-    main(function_name=args.function)
+    main(args.function, batch_size=args.batch, max_epochs=args.epochs)
