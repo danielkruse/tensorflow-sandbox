@@ -55,19 +55,24 @@ class Buffer:
 
         # Get sampling range
         record_range = min(self.buffer_counter, self.buffer_capacity)
-        # Randomly sample indices using uniform sample_weight_type
         if sample_weight_type == 'uniform':
+            # sample indices using uniform weight on each index
             sample_weights = 1./record_range * np.ones(record_range)
+        elif sample_weight_type == 'forgetful':
+            # sample indices with inverse importance for more recent records
+            receding_weights = 1./(record_range - np.linspace(0, record_range-1, record_range))
+            sample_weights = receding_weights / np.sum(receding_weights)
+            if self.buffer_counter > self.buffer_capacity:
+                buffer_idx = self.buffer_counter % self.buffer_capacity
+                sample_weights = np.roll(sample_weights, buffer_idx - 1)
         elif sample_weight_type == 'equalized':
+            # sample indices using weight = 1/p_i / sum(1/p_i)
             reward_pdf = self.reward_distribution / sum(self.reward_distribution)
-            r_max = self.reward_distribution_edges[0][-1]
-            r_min = self.reward_distribution_edges[0][0]
-            uniform_cdf = (self.reward_distribution_edges[0] - r_min)/(r_max - r_min)
-            uniform_pdf = uniform_cdf[1:] - uniform_cdf[:-1]
-            sample_weights = np.zeros((record_range, 1))
+            pdf_normalizer = np.sum(1./reward_pdf[np.nonzero(reward_pdf)])
+            sample_weights = np.zeros(record_range)
             for i, r in enumerate(self.reward_buffer[:record_range]):
                 dist_idx = get_histogram_index([np.array(r)], self.reward_distribution_edges)
-                sample_weights[i] = uniform_pdf[dist_idx] / reward_pdf[dist_idx]
+                sample_weights[i] = 1.0 / self.reward_distribution[dist_idx] / pdf_normalizer / reward_pdf[dist_idx]
         else:
             print("Unknown sample distribution type provided: {}, defaulting to uniform".format(sample_weight_type))
             sample_weights = None
