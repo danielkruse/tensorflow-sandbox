@@ -99,25 +99,20 @@ def display_1d_actor_and_critic(actor, critic, observation_space, action_space, 
     ax2_2_2.grid()
     fig2.tight_layout()
 
-    observed_state_distribution, sampled_state_distribution, state_bin_edges = state_histogram
-    state_bin_centers = [0.5*(edge[1:] + edge[:-1]) for edge in state_bin_edges]
-    observed_state_distribution = observed_state_distribution / sum(observed_state_distribution.flatten())
-    sampled_state_distribution = sampled_state_distribution / sum(sampled_state_distribution.flatten())
-
-    observed_reward_distribution, sampled_reward_distribution, reward_bin_edges = reward_histogram
-    reward_bin_centers = [0.5*(edge[1:] + edge[:-1]) for edge in reward_bin_edges]
-    observed_reward_distribution = observed_reward_distribution / sum(observed_reward_distribution)
-    sampled_reward_distribution = sampled_reward_distribution / sum(sampled_reward_distribution)
-
+    observed_state_distribution, sampled_state_distribution, state_bin_centers = histogram_to_distribution(state_histogram)
+    observed_reward_distribution, sampled_reward_distribution, reward_bin_centers = histogram_to_distribution(reward_histogram)
+    
+    state_bin_width = np.mean(state_bin_centers[0][1:] - state_bin_centers[0][:-1])
+    reward_bin_width = np.mean(reward_bin_centers[0][1:] - reward_bin_centers[0][:-1])
     fig3 = plt.figure()
     ax3_1 = fig3.add_subplot(1, 2, 1)
-    ax3_1.bar(state_bin_centers[0], observed_state_distribution, 1.0, alpha=0.4, label='observed')
-    ax3_1.bar(state_bin_centers[0], sampled_state_distribution, 1.0, alpha=0.4, label='sampled')
+    ax3_1.bar(state_bin_centers[0], observed_state_distribution, state_bin_width, alpha=0.4, label='observed')
+    ax3_1.bar(state_bin_centers[0], sampled_state_distribution, state_bin_width, alpha=0.4, label='sampled')
     ax3_1.set(xlabel='X', ylabel='frequency of observance', title='state distribution')
     ax3_1.legend()
     ax3_2 = fig3.add_subplot(1, 2, 2)
-    ax3_2.bar(reward_bin_centers[0], observed_reward_distribution, 1.0, alpha=0.4, label='observed')
-    ax3_2.bar(reward_bin_centers[0], sampled_reward_distribution, 1.0, alpha=0.4, label='sampled')
+    ax3_2.bar(reward_bin_centers[0], observed_reward_distribution, reward_bin_width, alpha=0.4, label='observed')
+    ax3_2.bar(reward_bin_centers[0], sampled_reward_distribution, reward_bin_width, alpha=0.4, label='sampled')
     ax3_2.set(xlabel='reward', ylabel='frequency of observance', title='reward distribution')
     ax3_2.legend()
 
@@ -222,6 +217,14 @@ def load_histogram(gym_name, distribution_name):
     sampled_distribution = distribution_npzfile['sampled_counts']
     distribution_edges = distribution_npzfile['edges']
     return observed_distribution, sampled_distribution, distribution_edges
+
+def histogram_to_distribution(histogram):
+    observed_counts, sampled_counts, bin_edges = histogram
+    bin_centers = np.array([0.5*(edge[1:] + edge[:-1]) for edge in bin_edges])
+    observed_distribution = observed_counts / sum(observed_counts)
+    sampled_distribution = sampled_counts / sum(sampled_counts)
+
+    return observed_distribution, sampled_distribution, bin_centers
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Tensorflow DDPG example')
