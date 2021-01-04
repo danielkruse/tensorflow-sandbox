@@ -231,6 +231,8 @@ def display_2d_actor_and_critic(actor, critic, observation_space, action_space, 
     # Collect bounds and widths of data bins that are helpful for plotting and axis labels
     state_bnds = (state_bin_centers[0][0], state_bin_centers[0][-1], state_bin_centers[-1][0], state_bin_centers[0][-1])
     reward_bin_width = np.mean(reward_bin_centers[0][1:] - reward_bin_centers[0][:-1])
+    max_state_dist = np.max([observed_state_distribution, sampled_state_distribution])
+    min_state_dist = np.min([observed_state_distribution, sampled_state_distribution])
 
     # Figure showing distribution of sampling in state and reward spaces
     # States are displayed as heatmap images, Reward as a histogram
@@ -240,14 +242,14 @@ def display_2d_actor_and_critic(actor, critic, observation_space, action_space, 
     # Heatmap image of observed state distribution
     f2_ax1 = fig2.add_subplot(gs2[0, 0])
     # generate heatmap image - use extent to relabel axes
-    obs_state_dist_imshow = f2_ax1.imshow(observed_state_distribution, extent=state_bnds)
+    obs_state_dist_imshow = f2_ax1.imshow(observed_state_distribution, extent=state_bnds, vmin=min_state_dist, vmax=max_state_dist)
     f2_ax1.set(xlabel='X', ylabel='Y', title='observed state distribution')
-    fig2.colorbar(obs_state_dist_imshow, ax=f2_ax1, use_gridspec=True)
+    # fig2.colorbar(obs_state_dist_imshow, ax=f2_ax1, use_gridspec=True)
 
     # Heatmap image of off-policy sampled state distribution
     f2_ax2 = fig2.add_subplot(gs2[0, 1])
     # generate heatmap image - use extent to relabel axes
-    smpl_state_dist_imshow = f2_ax2.imshow(sampled_state_distribution, extent=state_bnds)
+    smpl_state_dist_imshow = f2_ax2.imshow(sampled_state_distribution, extent=state_bnds, vmin=min_state_dist, vmax=max_state_dist)
     f2_ax2.set(xlabel='X', ylabel='Y', title='sampled state distribution')
     fig2.colorbar(smpl_state_dist_imshow, ax=f2_ax2, use_gridspec=True)
     
