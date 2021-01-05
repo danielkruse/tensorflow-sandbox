@@ -25,6 +25,8 @@ class Custom2DGym(gym.Env):
             dtype=np.float32
         )
 
+        self.obstacles = []
+
         self.seed()
     
     # random generator initialization
