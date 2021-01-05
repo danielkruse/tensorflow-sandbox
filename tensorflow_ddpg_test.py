@@ -244,7 +244,7 @@ def display_2d_actor_and_critic(actor, critic, observation_space, action_space, 
     # generate heatmap image - use extent to relabel axes
     obs_state_dist_imshow = f2_ax1.imshow(observed_state_distribution, extent=state_bnds, vmin=min_state_dist, vmax=max_state_dist)
     f2_ax1.set(xlabel='X', ylabel='Y', title='observed state distribution')
-    # fig2.colorbar(obs_state_dist_imshow, ax=f2_ax1, use_gridspec=True)
+    fig2.colorbar(obs_state_dist_imshow, ax=f2_ax1, use_gridspec=True)
 
     # Heatmap image of off-policy sampled state distribution
     f2_ax2 = fig2.add_subplot(gs2[0, 1])
@@ -331,7 +331,7 @@ def train_ddpg(gym_name,
     #   'uniform' - all prior episodes equal weight
     #   'forgetful' - newest episodes weighted higher than older samples
     #   'equalized' - episodes inversely weighted by distribution of reward observance
-    sampling_strategy = 'equalized'
+    sampling_strategy = 'forgetful'
 
     # Training hyperparameters
     std_dev = 0.2
