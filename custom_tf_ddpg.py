@@ -1,6 +1,7 @@
 import gym
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+import time
 
 # Buffer for storing experience tuples of state, action, reward, next state
 class Buffer:
@@ -17,6 +18,7 @@ class Buffer:
         self.action_buffer = np.zeros((self.buffer_capacity, num_actions))
         self.reward_buffer = np.zeros((self.buffer_capacity, 1))
         self.next_state_buffer = np.zeros((self.buffer_capacity, num_states))
+        self.buffer_weights = np.zeros(self.buffer_capacity)
         
         self.state_distribution_edges = [np.linspace(-1., 1., num_state_bins+1)] * num_states
         self.state_distribution = np.zeros([num_state_bins] * num_states)
@@ -26,12 +28,25 @@ class Buffer:
         # Record of sampling history
         self.sampling_history = {}
 
+        self.compiled = False
+    
+    def compile(self, buffer_sampling='uniform'):
+        self.buffer_sampling = buffer_sampling
+        if self.buffer_sampling not in ['uniform', 'forgetful', 'equalized']:
+            print("Unknown sample distribution type provided: {}, defaulting to uniform".format(self.buffer_sampling))
+            self.buffer_sampling = 'uniform'
+        
+        if self.buffer_sampling == 'equalized':
+            self.buffer_indices = np.zeros(self.buffer_capacity, dtype=int)
+        
+        self.compiled = True
+
     # Takes (s,a,r,s') obervation tuple as input
     def record(self, state, action, reward, next_state):
         # Set index to zero if buffer_capacity is exceeded, replacing old records
         index = self.buffer_counter % self.buffer_capacity
 
-        if index < self.buffer_counter:
+        if self.buffer_counter >= self.buffer_capacity:
             # remove prior element from histogram
             last_state_hist_index = get_histogram_index(self.state_buffer[index], self.state_distribution_edges)
             last_reward_hist_index = get_histogram_index(self.reward_buffer[index], self.reward_distribution_edges)
@@ -48,35 +63,41 @@ class Buffer:
         self.action_buffer[index] = action
         self.reward_buffer[index] = reward
         self.next_state_buffer[index] = next_state
+        
+        if self.buffer_sampling == 'uniform':
+            # sample indices using uniform weight on each index
+            if self.buffer_counter < self.buffer_capacity:
+                self.buffer_weights[:index+1] = 1/(index+1)
+        elif self.buffer_sampling == 'forgetful':
+            # sample indices with inverse importance for more recent records
+            if self.buffer_counter < self.buffer_capacity:
+                self.buffer_weights[:index+1] = np.linspace(1, index+1, index+1) * 2 / ((index + 1) * (index + 2))
+            else:
+                self.buffer_weights = np.roll(self.buffer_weights, 1)
+        elif self.buffer_sampling == 'equalized':
+            # sample indices using weight = 1/p_i / sum(1/p_i)
+            buffer_range = min(self.buffer_counter, self.buffer_capacity)
+            self.buffer_indices[index] = reward_hist_index[0]
+            inv_hist_sum = 0.0
+            for n_i in np.nditer(self.reward_distribution):
+                if n_i > 0:
+                    inv_hist_sum += 1.0 / n_i
+            for i, dist_idx in np.ndenumerate(self.buffer_indices[:buffer_range+1]):
+                # dist_idx = get_histogram_index(np.array([r]), self.reward_distribution_edges)
+                # print("checking index of {}: {}".format(i, dist_idx))
+                w = 1.0 / (self.reward_distribution[dist_idx] ** 2 * inv_hist_sum) 
+                self.buffer_weights[i[0]] = w
+        if not np.abs(np.sum(self.buffer_weights) - 1.0) < 1e-3:
+            print("recording {} formed using {} with sum {}".format(index, self.buffer_sampling, np.sum(self.buffer_weights)))
+            print("buffer weights: {}".format(self.buffer_weights[:index+1]))
 
         self.buffer_counter += 1
         
-    def sample(self, sample_weight_type='uniform'):
+    def sample(self):
 
         # Get sampling range
         record_range = min(self.buffer_counter, self.buffer_capacity)
-        if sample_weight_type == 'uniform':
-            # sample indices using uniform weight on each index
-            sample_weights = 1./record_range * np.ones(record_range)
-        elif sample_weight_type == 'forgetful':
-            # sample indices with inverse importance for more recent records
-            receding_weights = 1./(record_range - np.linspace(0, record_range-1, record_range))
-            sample_weights = receding_weights / np.sum(receding_weights)
-            if self.buffer_counter > self.buffer_capacity:
-                buffer_idx = self.buffer_counter % self.buffer_capacity
-                sample_weights = np.roll(sample_weights, buffer_idx - 1)
-        elif sample_weight_type == 'equalized':
-            # sample indices using weight = 1/p_i / sum(1/p_i)
-            reward_pdf = self.reward_distribution / sum(self.reward_distribution)
-            pdf_normalizer = np.sum(1./reward_pdf[np.nonzero(reward_pdf)])
-            sample_weights = np.zeros(record_range)
-            for i, r in enumerate(self.reward_buffer[:record_range]):
-                dist_idx = get_histogram_index([np.array(r)], self.reward_distribution_edges)
-                sample_weights[i] = 1.0 / self.reward_distribution[dist_idx] / pdf_normalizer / reward_pdf[dist_idx]
-        else:
-            print("Unknown sample distribution type provided: {}, defaulting to uniform".format(sample_weight_type))
-            sample_weights = None
-        batch_indices = np.random.choice(record_range, size=self.batch_size, p=sample_weights)
+        batch_indices = np.random.choice(record_range, size=self.batch_size, p=self.buffer_weights[:record_range])
         
         # Sample each buffer
         state_batch = self.state_buffer[batch_indices]
@@ -118,6 +139,12 @@ class Buffer:
         # Re-establish edges for the reward buffer
         num_reward_bins = np.size(self.reward_distribution_edges[0]) - 1 
         self.reward_distribution, self.reward_distribution_edges = np.histogramdd(self.reward_buffer[:record_range], num_reward_bins)
+
+        # If equalized buffer, reassess sample indices
+        if self.buffer_sampling == 'equalized':
+            for i, r in np.ndenumerate(self.reward_buffer[:record_range]):
+                dist_idx = get_histogram_index(np.array([r]), self.reward_distribution_edges)
+                self.buffer_indices[i[0]] = dist_idx[0]
     
     def save_buffer(self, filepath):
         sampled_state_distribution = np.zeros(np.shape(self.state_distribution))
@@ -172,7 +199,7 @@ class DDPG:
     def compile(self, actor_optimizer=tf.keras.optimizers.Adam(), critic_optimizer=tf.keras.optimizers.Adam(), buffer_sampling='uniform'):
         self.actor_optimizer = actor_optimizer
         self.critic_optimizer = critic_optimizer
-        self.buffer_sampler = buffer_sampling
+        self.buffer.compile(buffer_sampling=buffer_sampling)
         self._compiled = True
     
     def policy(self, state, action_noise_stddev):                
@@ -207,7 +234,9 @@ class DDPG:
             state = self.env.reset()
             episodic_reward = 0
 
+            step_durations = []
             # run episode
+            step_start = time.clock()
             while True:
                 # Render environment if requested
                 if render_env:
@@ -221,7 +250,7 @@ class DDPG:
                 self.buffer.record(state, action, np.array([reward]), next_state)
                 episodic_reward += reward
                 # sample buffer
-                state_batch, action_batch, reward_batch, next_state_batch = self.buffer.sample(sample_weight_type=self.buffer_sampler)
+                state_batch, action_batch, reward_batch, next_state_batch = self.buffer.sample()
 
                 # train actor and critic
                 critic_loss, actor_loss = self.train_models(gamma, state_batch, action_batch, reward_batch, next_state_batch)
@@ -230,13 +259,15 @@ class DDPG:
                 self.update_targets(tau)
 
                 # End this episode when `done` is True
+                step_durations.append(time.clock() - step_start)
+                step_start = time.clock()
                 if done:
                     break
                 
                 # Propagate the state forward
                 state = next_state
             
-            print("Episode {} * Reward: {}".format(episode, episodic_reward))
+            print("Episode {} * Total Time {:.2f}s * Avg Step {:.2f}s * Reward: {:.2f}".format(episode, sum(step_durations), np.average(step_durations), episodic_reward))
             self.buffer.adjust_distribution()
             # Store metrics about the episode 
             history['episode'].append(episode)
