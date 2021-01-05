@@ -55,15 +55,15 @@ def generate_critic(num_states, num_actions):
     model = tf.keras.Model([state_input, action_input], outputs)
     return model
 
-def display_1d_actor_and_critic(actor, critic, observation_space, action_space, state_histogram, reward_histogram):
+def display_1d_actor_and_critic(actor, critic, env, state_histogram, reward_histogram):
     # state data ranges to evaluate over
-    xmax, = observation_space.high
-    xmin, = observation_space.low
+    xmax, = env.observation_space.high
+    xmin, = env.observation_space.low
     xdisp = np.linspace(xmin, xmax, 50)
 
     # action data ranges to evaluate over
-    umax, = action_space.high
-    umin, = action_space.low
+    umax, = env.action_space.high
+    umin, = env.action_space.low
     udisp = np.linspace(umin, umax, 25)
 
     # evaluate the Q values over X, U grid
@@ -156,10 +156,10 @@ def display_1d_actor_and_critic(actor, critic, observation_space, action_space, 
     fig3.tight_layout()
 
 
-def display_2d_actor_and_critic(actor, critic, observation_space, action_space, state_histogram, reward_histogram):
+def display_2d_actor_and_critic(actor, critic, env, state_histogram, reward_histogram):
     # state data ranges to evaluate over
-    xmax, ymax = observation_space.high
-    xmin, ymin = observation_space.low
+    xmax, ymax = env.observation_space.high
+    xmin, ymin = env.observation_space.low
     xdisp = np.linspace(xmin, xmax, 20)
     ydisp = np.linspace(ymin, ymax, 20)
     # Generate state grid
@@ -168,8 +168,8 @@ def display_2d_actor_and_critic(actor, critic, observation_space, action_space, 
 
     # action data ranges to evaluate over
     #  (reconstructing x-y actions as direction and magnitude for future quiver usage)
-    uxmax, uymax = action_space.high
-    uxmin, uymin = action_space.low
+    uxmax, uymax = env.action_space.high
+    uxmin, uymin = env.action_space.low
     uthetadisp = np.linspace(0, 2*np.pi, 16)
     umagdisp = np.linspace(0, 1.0, 10)
     Umaggrid, Uthetagrid = np.meshgrid(umagdisp, uthetadisp)
@@ -213,6 +213,11 @@ def display_2d_actor_and_critic(actor, critic, observation_space, action_space, 
 
     # Critic results displayed as contour plot for value and quiver for max advantage
     f1_ax1 = fig1.add_subplot(gs1[0, 0])
+    if env.obstacles:
+        for pos, rad in env.obstacles:
+            obs_circle = plt.Circle(pos, rad, facecolor='blue', edgecolor='red', alpha=0.4)
+            f1_ax1.add_patch(obs_circle)
+
     f1_ax1.contour(Xgrid, Ygrid, Vval_critic, 10)
     f1_ax1.quiver(Xgrid, Ygrid, uxval_critic, uyval_critic, pivot='mid')
     f1_ax1.set(xlabel='X', ylabel='Y', title='target critic')
@@ -220,6 +225,10 @@ def display_2d_actor_and_critic(actor, critic, observation_space, action_space, 
 
     # Actor results display as quiver
     f1_ax2 = fig1.add_subplot(gs1[0, 1])
+    if env.obstacles:
+        for pos, rad in env.obstacles:
+            obs_circle = plt.Circle(pos, rad, facecolor='blue', edgecolor='red', alpha=0.4)
+            f1_ax2.add_patch(obs_circle)
     f1_ax2.quiver(Xgrid, Ygrid, uxval_actor, uyval_actor, pivot='mid')
     f1_ax2.set(xlabel='X', ylabel='Y', title='target actor')
     f1_ax2.grid()
@@ -280,8 +289,7 @@ def display_ddpg_results(gym_name):
         display_1d_actor_and_critic(
             target_actor, 
             target_critic, 
-            env.observation_space, 
-            env.action_space, 
+            env, 
             state_histogram, 
             reward_histogram
         )
@@ -289,8 +297,7 @@ def display_ddpg_results(gym_name):
         display_2d_actor_and_critic(
             target_actor, 
             target_critic, 
-            env.observation_space, 
-            env.action_space, 
+            env, 
             state_histogram, 
             reward_histogram
         )
