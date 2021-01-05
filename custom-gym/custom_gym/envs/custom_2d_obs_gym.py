@@ -27,7 +27,10 @@ class Custom2DObstaclesGym(gym.Env):
 
         # store obstacles as array of tuples with center (x, y), radius
         self.body_radius = 0.25
-        self.obstacles = [(np.array([-2., 2.]), 1.0)]
+        self.obstacles = [
+            (np.array([-2., 2.]), 1.0),
+            (np.array([2., 0.]), 1.0),
+        ]
 
         self.seed()
     
