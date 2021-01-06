@@ -99,9 +99,11 @@ python -m pip install --upgrade --user keras
 
 ### Installing CUDA GPU optimization
 
-Refer to [Install CUDA with APT](https://www.tensorflow.org/install/gpu#install_cuda_with_apt) for full instructions
+Note that TensorFlow 2.4 supports CUDA 11 according to [TensorFlow GPU Support](https://www.tensorflow.org/install/gpu) which requires nVidia drivers 450.x or higher according to [nVidia CUDA Compatibility](https://docs.nvidia.com/deploy/cuda-compatibility/index.html)
 
 #### Ubuntu 18.04
+
+Refer to [Install CUDA with APT](https://www.tensorflow.org/install/gpu#install_cuda_with_apt) for full instructions from TensorFlow
 
 ```bash
 # Add NVIDIA package repositories
@@ -139,7 +141,7 @@ sudo apt-get install -y --no-install-recommends libnvinfer7=7.1.3-1+cuda11.0 \
 
 #### Windows 10
 
-Please refer to the [CUDA® install guide for Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/). **TensorFlow will not load without the cuDNN64_8.dll file.**
+Please refer to [GPU Windows setup](https://www.tensorflow.org/install/gpu#windows_setup) from TensorFlow and the [CUDA® install guide for Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/). **TensorFlow will not load without the cuDNN64_8.dll file.**
 
 Add the CUDA®, CUPTI, and cuDNN installation directories to the %PATH% environmental variable. For example, if the CUDA® Toolkit is installed to `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0` and cuDNN to `C:\tools\cuda`, update your `%PATH%` to match
 
