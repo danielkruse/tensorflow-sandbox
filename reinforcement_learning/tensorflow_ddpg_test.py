@@ -403,8 +403,8 @@ def histogram_to_distribution(histogram_tuple):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Tensorflow DDPG example')
     parser.add_argument('gym', help='name of gym to train against')
-    parser.add_argument('-t', '--train', action='store_true', help='name of gym to train against')
-    parser.add_argument('-d', '--display', action='store_true', help='display results from training on provided gym')
+    parser.add_argument('-t', '--train', action='store_true', help='flag to train gym in DDPG')
+    parser.add_argument('-d', '--display', action='store_true', help='flag to display most recent results from training')
     parser.add_argument('-e', '--episodes', default=100, type=int, help='number of episodes to train over')
     parser.add_argument('--render_gym', action='store_true', help='render gym')
     args = parser.parse_args()
