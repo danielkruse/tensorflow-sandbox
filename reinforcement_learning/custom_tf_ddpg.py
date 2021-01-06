@@ -30,11 +30,11 @@ class Buffer:
 
         self.compiled = False
     
-    def compile(self, buffer_sampling='uniform'):
+    def compile(self, buffer_sampling='forgetful'):
         self.buffer_sampling = buffer_sampling
         if self.buffer_sampling not in ['uniform', 'forgetful', 'equalized']:
-            print("Unknown sample distribution type provided: {}, defaulting to uniform".format(self.buffer_sampling))
-            self.buffer_sampling = 'uniform'
+            print("Unknown sample distribution type provided: {}, defaulting to forgetful".format(self.buffer_sampling))
+            self.buffer_sampling = 'forgetful'
         
         if self.buffer_sampling == 'equalized':
             self.buffer_indices = np.zeros(self.buffer_capacity, dtype=int)
