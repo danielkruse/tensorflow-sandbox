@@ -85,7 +85,6 @@ def display_results(training_history, checkpoint_callback, Xtrain, Ytrain, Xtest
 
     Xmax = np.max(Xtest)
     Xmin = np.min(Xtest)
-    Xrng = Xmax - Xmin
 
     # grab test and training data from collected data
     Ynn = checkpoint_callback.get_train_data(-1)
