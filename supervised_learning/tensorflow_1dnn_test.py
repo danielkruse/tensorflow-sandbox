@@ -246,8 +246,8 @@ def main(function_name, max_epochs=1000, batch_size=16):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description = '1D Tensorflow example')
-    parser.add_argument('-f', '--function', help='function name')
-    parser.add_argument('-e', '--epochs', type=int, help='epochs to train over')
-    parser.add_argument('-b', '--batch', type=int, help='batch size')
+    parser.add_argument('function', help='function name')
+    parser.add_argument('-e', '--epochs', type=int, default=1000, help='epochs to train over')
+    parser.add_argument('-b', '--batch', type=int, default=16, help='batch size')
     args = parser.parse_args()
     main(args.function, batch_size=args.batch, max_epochs=args.epochs)
