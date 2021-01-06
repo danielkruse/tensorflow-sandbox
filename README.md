@@ -97,7 +97,7 @@ python -m pip install --upgrade --user keras
 * `pandas` - Python Data Analysis Library
 * `scipy` - Scientific Computation Library based on NumPy useful for statistics and signal processing
 
-### Installing CUDA GPU optimization
+### Installing CUDA GPU optimization (optional)
 
 Note that TensorFlow 2.4 supports CUDA 11 according to [TensorFlow GPU Support](https://www.tensorflow.org/install/gpu) which requires nVidia drivers 450.x or higher according to [nVidia CUDA Compatibility](https://docs.nvidia.com/deploy/cuda-compatibility/index.html)
 
