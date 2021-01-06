@@ -32,7 +32,7 @@ def generate_actor(num_states, num_actions, upper_bound):
     # Initialize weights between -3e-3 and 3-e3
     last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
     outputs = tf.keras.layers.Dense(num_actions, activation="tanh", kernel_initializer=last_init)(out)
-    # Our upper bound is 2.0 for Pendulum.
+    # Use upper bound to scale the outputs to the meaningful action space
     outputs = outputs * upper_bound
     model = tf.keras.Model(inputs, outputs)
     return model
