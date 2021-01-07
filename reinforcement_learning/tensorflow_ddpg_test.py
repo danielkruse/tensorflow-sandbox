@@ -362,13 +362,9 @@ def train_ddpg(gym_name,
     
     # Plotting graph
     # Episodes versus Avg. Rewards
-    _, [ax1, ax2, ax3] = plt.subplots(3, 1, sharex=True)
-    ax1.plot(ddpg_history['episode'], ddpg_history['reward'])
-    ax1.set(ylabel='Episodic Reward')
-    ax2.semilogy(ddpg_history['episode'], ddpg_history['critic_loss'])
-    ax2.set(ylabel='Critic Loss')
-    ax3.semilogy(ddpg_history['episode'], ddpg_history['actor_loss'])
-    ax3.set(xlabel='Episode', ylabel='Actor Loss')
+    _, f1_ax1 = plt.subplots(1, 1)
+    f1_ax1.plot(ddpg_history['episode'], ddpg_history['reward'])
+    f1_ax1.set(ylabel='Episodic Reward')
     plt.show()
 
 def load_ddpg(gym_name):

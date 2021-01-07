@@ -97,6 +97,8 @@ class Buffer:
 
         # Get sampling range
         record_range = min(self.buffer_counter, self.buffer_capacity)
+
+        # Get weighted sampling indices
         batch_indices = np.random.choice(record_range, size=self.batch_size, p=self.buffer_weights[:record_range])
         
         # Sample each buffer
@@ -224,9 +226,7 @@ class DDPG:
         self.target_critic.set_weights(self.critic.get_weights())
 
         history = {
-            'episode':[], 
-            'critic_loss': [], 
-            'actor_loss': [], 
+            'episode':[],
             'reward': []
         }
 
@@ -253,7 +253,7 @@ class DDPG:
                 state_batch, action_batch, reward_batch, next_state_batch = self.buffer.sample()
 
                 # train actor and critic
-                critic_loss, actor_loss = self.train_models(gamma, state_batch, action_batch, reward_batch, next_state_batch)
+                self.train_models(gamma, state_batch, action_batch, reward_batch, next_state_batch)
 
                 # propagate weights into target actor and critic
                 self.update_targets(tau)
@@ -267,16 +267,21 @@ class DDPG:
                 # Propagate the state forward
                 state = next_state
             
-            print("Episode {} * Total Time {:.2f}s * Avg Step {:.2f}s * Reward: {:.2f}".format(episode, sum(step_durations), np.average(step_durations), episodic_reward))
+            print("Episode {} * Total Time {:.2f}s * Avg Step {:.2f}s * Reward: {:.2f}".format(
+                episode, 
+                sum(step_durations), 
+                np.average(step_durations), 
+                episodic_reward)
+            )
             self.buffer.adjust_distribution()
             # Store metrics about the episode 
             history['episode'].append(episode)
-            history['critic_loss'].append(critic_loss)
-            history['actor_loss'].append(actor_loss)
             history['reward'].append(episodic_reward)
         
         return history
     
+    # Decorating as a tf-function 
+    @tf.function
     def train_models(self, gamma, state_batch, action_batch, reward_batch, next_state_batch):
         # Train and update critic
         with tf.GradientTape() as tape:
@@ -300,8 +305,6 @@ class DDPG:
 
         actor_grad = tape.gradient(actor_loss, self.actor.trainable_variables)
         self.actor_optimizer.apply_gradients(zip(actor_grad, self.actor.trainable_variables))
-
-        return critic_loss.numpy(), actor_loss.numpy()
 
     @tf.function
     def update_targets(self, tau):
